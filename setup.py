@@ -33,10 +33,11 @@ setup(
 
     install_requires=[
         'conllu',
-        'datasets>=1.8',
+        'datasets>=1.8,<3',
         'huggingface-hub>=0.0.17',
         'seqeval',
-        'transformers>=4.9',
+        'transformers>=4.9,<5',
+        'fvcore'
     ],
     python_requires='>=3.9',
 )
