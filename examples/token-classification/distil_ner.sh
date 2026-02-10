@@ -15,7 +15,7 @@ STUDENT_MODEL_TOKENIZER="/content/drive/MyDrive/Bistil_Modified_Resources/bistil
 TEACHER_MODEL=bert-base-multilingual-cased
 LANG_SFT=cambridgeltl/mbert-lang-sft-${SOURCE_LANG}-small
 TASK_SFT=cambridgeltl/mbert-task-sft-masakhaner
-OUTPUT_DIR="/content/drive/MyDrive/Bistil_Modified_Resources/bistil_outputs/mbert-${SOURCE_LANG}-${TARGET_LANG}-6-layers-trimmed-vocab-distilled"
+OUTPUT_DIR="/content/drive/MyDrive/Bistil_Modified_Resources/bistil_outputs2/mbert-${SOURCE_LANG}-${TARGET_LANG}-6-layers-trimmed-vocab-distilled"
 mkdir -p $OUTPUT_DIR
 
 rm $STUDENT_MODEL/trainer_state.json
