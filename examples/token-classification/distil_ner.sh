@@ -10,12 +10,12 @@ TARGET_LANG=${LANGS[N]}
 SOURCE_LANG=en
 #LANG_FT=cambridgeltl/mbert-lang-sft-${SOURCE_LANG}-small
 
-STUDENT_MODEL=$HDD/experiments/distil/language-modeling/distil/mbert-${SOURCE_LANG}-${TARGET_LANG}-6-layers-trimmed-vocab-density-0.5
-STUDENT_MODEL_TOKENIZER=$HDD/experiments/distil/language-modeling/distil/mbert-${SOURCE_LANG}-${TARGET_LANG}-trimmed-vocab
+STUDENT_MODEL="/content/drive/MyDrive/Bistil_Modified_Resources/bistil_outputs/mbert-${SOURCE_LANG}-${TARGET_LANG}-6-layers-trimmed-vocab"
+STUDENT_MODEL_TOKENIZER="/content/drive/MyDrive/Bistil_Modified_Resources/bistil_outputs/mbert-${SOURCE_LANG}-${TARGET_LANG}-trimmed-vocab"
 TEACHER_MODEL=bert-base-multilingual-cased
 LANG_SFT=cambridgeltl/mbert-lang-sft-${SOURCE_LANG}-small
 TASK_SFT=cambridgeltl/mbert-task-sft-masakhaner
-OUTPUT_DIR=$HDD/experiments/distil/ner/distil/mbert-${SOURCE_LANG}-${TARGET_LANG}-6-layers-trimmed-vocab-density-0.5-distilled
+OUTPUT_DIR="/content/drive/MyDrive/Bistil_Modified_Resources/bistil_outputs/mbert-${SOURCE_LANG}-${TARGET_LANG}-6-layers-trimmed-vocab-distilled"
 mkdir -p $OUTPUT_DIR
 
 rm $STUDENT_MODEL/trainer_state.json
@@ -39,7 +39,7 @@ python distil_token_classification.py \
   --overwrite_output_dir \
   --full_ft_max_epochs_per_iteration 3 \
   --sparse_ft_max_epochs_per_iteration 10 \
-  --save_steps 1000000 \
+  --save_steps 1000 \
   --ft_params_proportion 0.08 \
   --evaluation_strategy epoch \
   --save_strategy epoch \

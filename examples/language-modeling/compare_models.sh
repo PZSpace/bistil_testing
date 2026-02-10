@@ -5,7 +5,7 @@
 # Configuration
 SOURCE_LANG=en
 TARGET_LANG=ibo
-CORPUS_DIR="./corpora"  # Must match training script
+CORPUS_DIR="/content/drive/MyDrive/Bistil_Modified_Resources/data"  # Must match training script
 RESULTS_DIR="./evaluation_results"
 
 # Create results directory
@@ -35,7 +35,7 @@ echo "2/3 Evaluating vocab-trimmed mBERT..."
 # 2. Vocabulary-trimmed model (after trim_vocab.py)
 # Note: Tokenizer is included in the model directory, no need to specify separately
 python evaluate_mlm.py \
-  --model_name_or_path /content/bistil_outputs/mbert-${SOURCE_LANG}-${TARGET_LANG}-trimmed-vocab \
+  --model_name_or_path /content/drive/MyDrive/Bistil_Modified_Resources/bistil_outputs/mbert-${SOURCE_LANG}-${TARGET_LANG}-trimmed-vocab \
   --source_file "${CORPUS_DIR}/${SOURCE_LANG}.txt" \
   --target_file "${CORPUS_DIR}/${TARGET_LANG}.txt" \
   --validation_split_percentage 5 \
@@ -50,8 +50,8 @@ echo "3/3 Evaluating distilled student model..."
 #       If your model was trained with the updated distil_mlm.py, the tokenizer is already saved
 #       with the model, but we specify it here for safety and backwards compatibility
 python evaluate_mlm.py \
-  --model_name_or_path /content/bistil_outputs/mbert-${SOURCE_LANG}-${TARGET_LANG}-6-layers-trimmed-vocab \
-  --tokenizer_name_or_path /content/bistil_outputs/mbert-${SOURCE_LANG}-${TARGET_LANG}-trimmed-vocab \
+  --model_name_or_path /content/drive/MyDrive/Bistil_Modified_Resources/bistil_outputs/mbert-${SOURCE_LANG}-${TARGET_LANG}-6-layers-trimmed-vocab \
+  --tokenizer_name_or_path /content/drive/MyDrive/Bistil_Modified_Resources/bistil_outputs/mbert-${SOURCE_LANG}-${TARGET_LANG}-trimmed-vocab \
   --source_file "${CORPUS_DIR}/${SOURCE_LANG}.txt" \
   --target_file "${CORPUS_DIR}/${TARGET_LANG}.txt" \
   --validation_split_percentage 5 \
