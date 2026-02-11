@@ -39,8 +39,8 @@ python distil_token_classification.py \
   --max_seq_length 128 \
   --overwrite_output_dir \
   --overwrite_cache \
-  --full_ft_max_epochs_per_iteration 3 \
-  --sparse_ft_max_epochs_per_iteration 10 \
+  --full_ft_max_epochs_per_iteration 1 \
+  --sparse_ft_max_epochs_per_iteration 1 \
   --save_steps 1000 \
   --ft_params_proportion 0.08 \
   --eval_strategy epoch \
