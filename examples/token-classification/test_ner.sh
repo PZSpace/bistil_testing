@@ -35,20 +35,22 @@ python distil_token_classification.py \
   --max_seq_length 128 \
   --overwrite_output_dir \
   --overwrite_cache \
-  --max_steps 50 \
-  --eval_steps 25 \
-  --save_steps 1000 \
-  --eval_strategy steps \
-  --save_strategy steps \
+  --full_ft_max_epochs_per_iteration 1 \
+  --sparse_ft_max_epochs_per_iteration 1 \
+  --save_steps 5000 \
+  --ft_params_proportion 0.08 \
+  --eval_strategy epoch \
+  --save_strategy epoch \
   --freeze_layer_norm \
   --learning_rate 5e-5 \
   --metric_for_best_model eval_f1 \
+  --load_best_model_at_end \
   --eval_split validation \
   --remove_unused_columns no \
   --save_total_limit 1
 
 # Key test parameters:
-# --max_steps 50           # Only train for 50 steps (~1-2 minutes)
-# --eval_steps 25          # Evaluate after 25 steps to test compute_metrics
-# --eval_strategy steps    # Use step-based eval instead of epoch-based
-# --save_total_limit 1     # Keep only 1 checkpoint to save space
+# --full_ft_max_epochs_per_iteration 1    # Only 1 epoch full fine-tuning
+# --sparse_ft_max_epochs_per_iteration 1  # Only 1 epoch sparse fine-tuning
+# Total: 2 epochs = ~3-4 minutes to test compute_metrics fix
+# --eval_strategy epoch                   # Will evaluate after each epoch
