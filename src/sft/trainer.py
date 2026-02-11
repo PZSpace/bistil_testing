@@ -607,7 +607,7 @@ class SparseFineTuner(Trainer):
             self.data_collator.train()
         return output
 
-    def _maybe_log_save_evaluate(self, tr_loss, model, trial, epoch, ignore_keys_for_eval):
+    def _maybe_log_save_evaluate(self, tr_loss, grad_norm, model, trial, epoch, ignore_keys_for_eval, start_time, learning_rate=None):
         if self.control.should_log:
             logs: Dict[str, float] = {}
             tr_loss_scalar = tr_loss.item()

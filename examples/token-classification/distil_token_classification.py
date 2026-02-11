@@ -307,6 +307,19 @@ def main():
             overwrite_cache=data_args.overwrite_cache,
         )
 
+    # DEBUG: Check raw dataset immediately after loading
+    print("\n" + "="*80)
+    print("DEBUG: Raw datasets loaded")
+    print("="*80)
+    print(f"Raw datasets keys: {raw_datasets.keys()}")
+    if "train" in raw_datasets:
+        print(f"Raw train dataset size: {len(raw_datasets['train'])}")
+        if len(raw_datasets['train']) > 0:
+            print(f"First example: {raw_datasets['train'][0]}")
+    if "validation" in raw_datasets:
+        print(f"Raw validation dataset size: {len(raw_datasets['validation'])}")
+    print("="*80 + "\n")
+
     if training_args.do_train:
         column_names = raw_datasets["train"].column_names
         features = raw_datasets["train"].features
@@ -439,55 +452,73 @@ def main():
         )
 
     # Preprocessing the dataset
-    # Padding strategy
-    padding = "max_length" if data_args.pad_to_max_length else False
+    # Padding strategy - Let data collator handle padding, not tokenizer
+    # Use False to disable padding during tokenization
+    padding = False
+    print(f"\nDEBUG: Tokenizer padding parameter set to: {padding}")
+    print(f"DEBUG: pad_to_max_length setting: {data_args.pad_to_max_length}")
 
     # Tokenize all texts and align the labels with them.
     def tokenize_and_align_labels(examples):
-        for idx in range(len(examples[text_column_name])):
-            examples[label_column_name][idx] = [
-                features[label_column_name].feature.names[label]
-                for label in examples[label_column_name][idx]
-            ]
-            invalid_indices = set(
-                i for i, pos in enumerate(examples[label_column_name][idx])
-                if pos == '_'
-            )
-            for col in [text_column_name, label_column_name]:
-                examples[col][idx] = [
-                    v for i, v in enumerate(examples[col][idx])
-                    if i not in invalid_indices
-                ]
+        # DEBUG: Log input to tokenization function
+        print(f"DEBUG tokenize_and_align_labels: Received {len(examples[text_column_name])} examples")
         
-        tokenized_inputs = tokenizer(
-            examples[text_column_name],
-            padding=padding,
-            truncation=True,
-            # We use this argument because the texts in our dataset are lists of words (with a label for each word).
-            is_split_into_words=True,
-        )
-        labels = []
-        for i, label in enumerate(examples[label_column_name]):
-            word_ids = tokenized_inputs.word_ids(batch_index=i)
-            previous_word_idx = None
-            label_ids = []
-            for word_idx in word_ids:
-                # Special tokens have a word id that is None. We set the label to -100 so they are automatically
-                # ignored in the loss function.
-                if word_idx is None:
-                    label_ids.append(-100)
-                # We set the label for the first token of each word.
-                elif word_idx != previous_word_idx:
-                    label_ids.append(label_to_id[label[word_idx]])
-                # For the other tokens in a word, we set the label to either the current label or -100, depending on
-                # the label_all_tokens flag.
-                else:
-                    label_ids.append(label_to_id[label[word_idx]] if data_args.label_all_tokens else -100)
-                previous_word_idx = word_idx
+        try:
+            for idx in range(len(examples[text_column_name])):
+                examples[label_column_name][idx] = [
+                    features[label_column_name].feature.names[label]
+                    for label in examples[label_column_name][idx]
+                ]
+                invalid_indices = set(
+                    i for i, pos in enumerate(examples[label_column_name][idx])
+                    if pos == '_'
+                )
+                for col in [text_column_name, label_column_name]:
+                    examples[col][idx] = [
+                        v for i, v in enumerate(examples[col][idx])
+                        if i not in invalid_indices
+                    ]
+            
+            tokenized_inputs = tokenizer(
+                examples[text_column_name],
+                padding=padding,
+                truncation=True,
+                # We use this argument because the texts in our dataset are lists of words (with a label for each word).
+                is_split_into_words=True,
+            )
+            labels = []
+            for i, label in enumerate(examples[label_column_name]):
+                word_ids = tokenized_inputs.word_ids(batch_index=i)
+                previous_word_idx = None
+                label_ids = []
+                for word_idx in word_ids:
+                    # Special tokens have a word id that is None. We set the label to -100 so they are automatically
+                    # ignored in the loss function.
+                    if word_idx is None:
+                        label_ids.append(-100)
+                    # We set the label for the first token of each word.
+                    elif word_idx != previous_word_idx:
+                        label_ids.append(label_to_id[label[word_idx]])
+                    # For the other tokens in a word, we set the label to either the current label or -100, depending on
+                    # the label_all_tokens flag.
+                    else:
+                        label_ids.append(label_to_id[label[word_idx]] if data_args.label_all_tokens else -100)
+                    previous_word_idx = word_idx
 
-            labels.append(label_ids)
-        tokenized_inputs["labels"] = labels
-        return tokenized_inputs
+                labels.append(label_ids)
+            tokenized_inputs["labels"] = labels
+            
+            # DEBUG: Log output from tokenization function
+            print(f"DEBUG tokenize_and_align_labels: Returning {len(tokenized_inputs['input_ids'])} tokenized examples")
+            return tokenized_inputs
+            
+        except Exception as e:
+            print(f"\n{'='*80}")
+            print(f"ERROR in tokenize_and_align_labels: {e}")
+            print(f"{'='*80}\n")
+            import traceback
+            traceback.print_exc()
+            raise
 
     if training_args.do_train:
         if "train" not in raw_datasets:
@@ -504,10 +535,24 @@ def main():
                 load_from_cache_file=not data_args.overwrite_cache,
                 desc="Running tokenizer on train dataset",
             )
+            
+            # DEBUG: Check dataset before filtering
+            print(f"\nDEBUG: After tokenization, train_dataset size: {len(train_dataset)}")
+            if len(train_dataset) > 0:
+                sample_lengths = [len(train_dataset[i]['input_ids']) for i in range(min(10, len(train_dataset)))]
+                print(f"DEBUG: Sample input_ids lengths: {sample_lengths}")
+            print(f"DEBUG: max_seq_length parameter value: {data_args.max_seq_length}")
+            
             if data_args.max_seq_length is not None:
+                print(f"DEBUG: Applying filter with max_seq_length={data_args.max_seq_length}")
+                before_filter = len(train_dataset)
                 train_dataset = train_dataset.filter(
                     lambda example: len(example['input_ids']) <= data_args.max_seq_length
                 )
+                after_filter = len(train_dataset)
+                print(f"DEBUG: After filter - kept {after_filter}/{before_filter} examples (removed {before_filter - after_filter})")
+            else:
+                print(f"DEBUG: No max_seq_length filter applied")
 
     if training_args.do_eval:
         if data_args.eval_split not in raw_datasets:
@@ -522,17 +567,29 @@ def main():
                 load_from_cache_file=not data_args.overwrite_cache,
                 desc="Running tokenizer on evaluation dataset",
             )
+            
+            # DEBUG: Check eval dataset before filtering  
+            print(f"\nDEBUG: After tokenization, eval_dataset size: {len(eval_dataset)}")
+            if len(eval_dataset) > 0:
+                sample_lengths = [len(eval_dataset[i]['input_ids']) for i in range(min(10, len(eval_dataset)))]
+                print(f"DEBUG: Sample input_ids lengths: {sample_lengths}")
+            
             if data_args.max_seq_length is not None:
+                print(f"DEBUG: Applying filter with max_seq_length={data_args.max_seq_length}")
+                before_filter = len(eval_dataset)
                 eval_dataset = eval_dataset.filter(
                     lambda example: len(example['input_ids']) <= data_args.max_seq_length
                 )
+                after_filter = len(eval_dataset)
+                print(f"DEBUG: After filter - kept {after_filter}/{before_filter} examples (removed {before_filter - after_filter})")
+            else:
+                print(f"DEBUG: No max_seq_length filter applied")
 
-    # Data collator
-    #data_collator = MyDataCollator(
+    # Data collator - pad to max_seq_length to ensure consistent sizes
     data_collator = DataCollatorForTokenClassification(
         tokenizer,
-        #padding='max_length',
-        #max_length=data_args.max_seq_length,
+        padding='max_length',
+        max_length=data_args.max_seq_length if data_args.max_seq_length else 512,
         pad_to_multiple_of=8 if training_args.fp16 else None
     )
 
@@ -683,6 +740,8 @@ def main():
     trainer_cls = LotteryTicketSparseFineTuner
     #trainer_cls = LotteryTicketPruner
     #trainer_cls = MultiSourcePlugin(trainer_cls)
+    print("Train Count: ", len(train_dataset))
+    print("Eval Count: ", len(eval_dataset))
     trainer = trainer_cls(
         sft_args=sft_args,
         param_groups=param_groups,

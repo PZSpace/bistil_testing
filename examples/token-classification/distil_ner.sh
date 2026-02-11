@@ -36,12 +36,14 @@ python distil_token_classification.py \
   --per_device_train_batch_size 8 \
   --per_device_eval_batch_size 8 \
   --task_name ner \
+  --max_seq_length 256 \
   --overwrite_output_dir \
+  --overwrite_cache \
   --full_ft_max_epochs_per_iteration 3 \
   --sparse_ft_max_epochs_per_iteration 10 \
   --save_steps 1000 \
   --ft_params_proportion 0.08 \
-  --evaluation_strategy epoch \
+  --eval_strategy epoch \
   --save_strategy epoch \
   --freeze_layer_norm \
   --learning_rate 5e-5 \
@@ -49,5 +51,7 @@ python distil_token_classification.py \
   --load_best_model_at_end \
   --eval_split validation \
   --remove_unused_columns no \
-  --save_total_limit 2 #> $OUTPUT_DIR/log.txt 2>&1
-  #--lang_ft $LANG_FT \
+  --save_total_limit 2
+
+#> $OUTPUT_DIR/log.txt 2>&1
+#--lang_ft $LANG_FT \
