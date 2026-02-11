@@ -1,12 +1,12 @@
 #!/bin/bash
-LANG=$1 # Hausa
+LANG=ibo # Hausa
 #PROP=$2
 #LANG_FT=cambridgeltl/mbert-lang-sft-${LANG}-small
 #TASK_FT=cambridgeltl/mbert-task-sft-masakhaner
 #BASE_MODEL=$HDD/experiments/distil/ner/distil/mbert-en-${LANG}-6-layers-trimmed-vocab-density-0.5-distilled
-BASE_MODEL=models/distil/ner/distil/mbert-en-${LANG}-6-layers-distilled
+BASE_MODEL=/content/drive/MyDrive/Bistil_Modified_Resources/bistil_outputs2/mbert-en-${LANG}-6-layers-trimmed-vocab-distilled
 #TOKENIZER=$HDD/experiments/distil/language-modeling/distil/mbert-en-${LANG}-trimmed-vocab
-TOKENIZER=bert-base-multilingual-cased
+TOKENIZER=/content/drive/MyDrive/Bistil_Modified_Resources/bistil_outputs/mbert-en-${LANG}-trimmed-vocab
 #TASK_FT=$HDD/experiments/distil/ner/mbert-${LANG}-en-${PROP}-8p
 #TASK_FT=models/ner/en
 
@@ -18,7 +18,7 @@ python run_token_classification.py \
   --output_dir results/ner/${LANG} \
   --do_eval \
   --label_column_name ner_tags \
-  --per_device_eval_batch_size 8 \
+  --per_device_eval_batch_size 4 \
   --task_name ner \
   --overwrite_output_dir \
   --eval_split test
