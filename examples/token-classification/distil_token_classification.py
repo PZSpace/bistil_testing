@@ -610,7 +610,23 @@ def main():
 
     def compute_metrics(p):
         predictions, labels = p
-        #print_thing(predictions)
+        
+        # Handle variable-length predictions by padding to max length
+        if isinstance(predictions, (list, tuple)):
+            # Find max length
+            max_len = max(pred.shape[0] if len(pred.shape) > 0 else 1 for pred in predictions)
+            padded_preds = []
+            for pred in predictions:
+                if len(pred.shape) == 1:
+                    # Add batch dimension if missing
+                    pred = np.expand_dims(pred, 0)
+                # Pad to max_len
+                if pred.shape[0] < max_len:
+                    padding = np.zeros((max_len - pred.shape[0],) + pred.shape[1:])
+                    pred = np.concatenate([pred, padding], axis=0)
+                padded_preds.append(pred)
+            predictions = np.array(padded_preds)
+        
         predictions = np.argmax(predictions, axis=-1)
 
         # Remove ignored index (special tokens)
