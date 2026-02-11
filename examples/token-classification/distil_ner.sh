@@ -33,8 +33,8 @@ python distil_token_classification.py \
   --do_train \
   --do_eval \
   --label_column_name ner_tags \
-  --per_device_train_batch_size 8 \
-  --per_device_eval_batch_size 8 \
+  --per_device_train_batch_size 4 \
+  --per_device_eval_batch_size 4 \
   --task_name ner \
   --max_seq_length 128 \
   --overwrite_output_dir \

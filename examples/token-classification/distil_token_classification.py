@@ -611,23 +611,71 @@ def main():
     def compute_metrics(p):
         predictions, labels = p
         
-        # Handle variable-length predictions by padding to max length
-        if isinstance(predictions, (list, tuple)):
-            # Find max length
-            max_len = max(pred.shape[0] if len(pred.shape) > 0 else 1 for pred in predictions)
-            padded_preds = []
-            for pred in predictions:
-                if len(pred.shape) == 1:
-                    # Add batch dimension if missing
-                    pred = np.expand_dims(pred, 0)
-                # Pad to max_len
-                if pred.shape[0] < max_len:
-                    padding = np.zeros((max_len - pred.shape[0],) + pred.shape[1:])
-                    pred = np.concatenate([pred, padding], axis=0)
-                padded_preds.append(pred)
-            predictions = np.array(padded_preds)
-        
-        predictions = np.argmax(predictions, axis=-1)
+        try:
+            # Debug: Print structure
+            print(f"\nDEBUG compute_metrics:")
+            print(f"  predictions type: {type(predictions)}")
+            
+            if isinstance(predictions, (tuple, list)):
+                print(f"  predictions is list/tuple with {len(predictions)} elements")
+                print(f"  First element shape: {predictions[0].shape if hasattr(predictions[0], 'shape') else 'no shape'}")
+                if len(predictions) > 1:
+                    print(f"  Second element shape: {predictions[1].shape if hasattr(predictions[1], 'shape') else 'no shape'}")
+                
+                # Convert all to numpy arrays
+                predictions = [np.asarray(pred) for pred in predictions]
+                
+                # Get shapes
+                shapes = [pred.shape for pred in predictions]
+                print(f"  All shapes: {shapes}")
+                
+                # Check if we need to pad
+                # Expected shape: (batch_size, seq_length, num_labels)
+                if len(shapes[0]) == 3:
+                    # Find max dimensions
+                    max_batch = max(s[0] for s in shapes)
+                    max_seq = max(s[1] for s in shapes)
+                    num_labels = shapes[0][2]
+                    
+                    print(f"  Max batch: {max_batch}, Max seq: {max_seq}, Num labels: {num_labels}")
+                    
+                    # Pad each prediction array
+                    padded_preds = []
+                    for pred in predictions:
+                        if pred.shape != (max_batch, max_seq, num_labels):
+                            # Need to pad
+                            pad_batch = max_batch - pred.shape[0]
+                            pad_seq = max_seq - pred.shape[1]
+                            
+                            if pad_batch > 0 or pad_seq > 0:
+                                pad_width = ((0, pad_batch), (0, pad_seq), (0, 0))
+                                pred = np.pad(pred, pad_width, mode='constant', constant_values=0)
+                    
+                        padded_preds.append(pred)
+                    
+                    # Concatenate along batch dimension
+                    predictions = np.concatenate(padded_preds, axis=0)
+                    print(f"  After concatenation shape: {predictions.shape}")
+                else:
+                    # Unexpected shape, try simple concatenation
+                    predictions = np.concatenate(predictions, axis=0)
+            
+            elif not isinstance(predictions, np.ndarray):
+                predictions = np.asarray(predictions)
+            
+            print(f"  Final predictions shape before argmax: {predictions.shape}")
+            
+            # Get class predictions
+            predictions = np.argmax(predictions, axis=-1)
+            print(f"  Predictions shape after argmax: {predictions.shape}")
+            print(f"  Labels shape: {labels.shape if hasattr(labels, 'shape') else np.array(labels).shape}")
+            
+        except Exception as e:
+            print(f"\nERROR in compute_metrics preprocessing:")
+            print(f"  {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
 
         # Remove ignored index (special tokens)
         true_predictions = [
