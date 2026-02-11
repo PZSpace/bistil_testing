@@ -268,6 +268,7 @@ def load_single_dataset(
         raw_datasets = datasets.load_dataset(
             dataset_json['name'],
             cache_dir=cache_dir,
+            trust_remote_code=True,
             **load_kwargs,
         )
     else:
@@ -287,6 +288,7 @@ def load_single_dataset(
             file_type,
             data_files=data_files,
             cache_dir=cache_dir,
+            trust_remote_code=True,
             **load_kwargs
         )
 
